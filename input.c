@@ -49,18 +49,11 @@ int read_integer(const char *message, int minimum, int maximum) {
     while (TRUE) {
         printf("%s", message);
 
-        /*
-            fgets lit une ligne complète au clavier.
-        */
         if (fgets(input, INPUT_SIZE, stdin) == NULL) {
             printf("Erreur de lecture. Reessayez.\n");
             continue;
         }
 
-        /*
-            sscanf essaye de transformer le texte en entier.
-            Si result vaut 1, la conversion a réussi.
-        */
         result = sscanf(input, "%d", &value);
 
         if (result != 1) {
@@ -68,9 +61,6 @@ int read_integer(const char *message, int minimum, int maximum) {
             continue;
         }
 
-        /*
-            On vérifie que le nombre est dans l’intervalle autorisé.
-        */
         if (value < minimum || value > maximum) {
             printf("Valeur incorrecte. Entrez un nombre entre %d et %d.\n",
                    minimum,
@@ -91,12 +81,9 @@ int read_integer_or_save(const char *message, int minimum, int maximum, int *sav
     int value;
     int result;
 
-    /*
-        Au départ, aucune sauvegarde n’est demandée.
-    */
-    *save_requested = FALSE;
-
     while (TRUE) {
+        *save_requested = FALSE;
+
         printf("%s\n", message);
         printf("Entrez une valeur entre %d et %d, ou S pour sauvegarder.\n> ",
                minimum,
@@ -109,10 +96,6 @@ int read_integer_or_save(const char *message, int minimum, int maximum, int *sav
 
         remove_newline(input);
 
-        /*
-            Si l’utilisateur tape S,
-            on indique au programme qu’il veut sauvegarder.
-        */
         if (is_save_command(input)) {
             *save_requested = TRUE;
             return 0;
@@ -130,7 +113,9 @@ int read_integer_or_save(const char *message, int minimum, int maximum, int *sav
                    minimum,
                    maximum);
             continue;
-        }
+        }  return value;
+    }
+}
 
         return value;
     }
