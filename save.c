@@ -16,6 +16,12 @@ int save_game(const Game *game) {
     int row;
     int column;
 
+    /*
+        On ouvre le fichier en mode écriture "w".
+
+        Si le fichier n’existe pas, il est créé.
+        S’il existe déjà, son ancien contenu est remplacé.
+    */
     file = fopen(SAVE_FILE, "w");
 
     if (file == NULL) {
@@ -23,19 +29,32 @@ int save_game(const Game *game) {
         return FALSE;
     }
 
+    /*
+        Première ligne du fichier :
+        nombre de joueurs, joueur actuel, numéro du tour.
+    */
     fprintf(file, "%d %d %d\n",
             game->player_count,
             game->current_player,
             game->turn_number);
 
+    /*
+        Ensuite, on écrit toutes les cases du plateau.
+    */
     for (row = 0; row < BOARD_HEIGHT; row++) {
         for (column = 0; column < BOARD_WIDTH; column++) {
             fputc(game->board[row][column], file);
         }
 
+        /*
+            Retour à la ligne après chaque ligne du plateau.
+        */
         fputc('\n', file);
     }
 
+    /*
+        On ferme le fichier.
+    */
     fclose(file);
 
     printf("Partie sauvegardee dans %s.\n", SAVE_FILE);
@@ -50,8 +69,11 @@ int load_game(Game *game) {
     FILE *file;
     int row;
     int column;
-    int character;
+    char character;
 
+    /*
+        On ouvre le fichier en lecture "r".
+    */
     file = fopen(SAVE_FILE, "r");
 
     if (file == NULL) {
@@ -59,6 +81,9 @@ int load_game(Game *game) {
         return FALSE;
     }
 
+    /*
+        On lit les informations principales de la sauvegarde.
+    */
     if (fscanf(file, "%d %d %d\n",
                &game->player_count,
                &game->current_player,
@@ -68,6 +93,9 @@ int load_game(Game *game) {
         return FALSE;
     }
 
+    /*
+        On vérifie que les informations lues sont correctes.
+    */
     if (game->player_count < MIN_PLAYERS || game->player_count > MAX_PLAYERS) {
         fclose(file);
         printf("Sauvegarde invalide : nombre de joueurs incorrect.\n");
@@ -80,31 +108,33 @@ int load_game(Game *game) {
         return FALSE;
     }
 
+    /*
+        On lit le plateau case par case.
+    */
     for (row = 0; row < BOARD_HEIGHT; row++) {
         for (column = 0; column < BOARD_WIDTH; column++) {
             character = fgetc(file);
 
-            if (character == EOF ||
-                (character != EMPTY_CELL &&
-                 character != BLOCK_CELL &&
-                 character != 'X' &&
-                 character != 'O' &&
-                 character != 'A')) {
+            /*
+                On vérifie que chaque caractère lu est autorisé.
+            */
+            if (character != EMPTY_CELL &&
+                character != BLOCK_CELL &&
+                character != 'X' &&
+                character != 'O' &&
+                character != 'A') {
                 fclose(file);
                 printf("Sauvegarde invalide : contenu du plateau incorrect.\n");
                 return FALSE;
             }
 
-            game->board[row][column] = (char) character;
+            game->board[row][column] = character;
         }
 
-        character = fgetc(file);
-
-        if (character != '\n' && character != EOF) {
-            fclose(file);
-            printf("Sauvegarde invalide : format du plateau incorrect.\n");
-            return FALSE;
-        }
+        /*
+            On lit le retour à la ligne après chaque ligne du plateau.
+        */
+        fgetc(file);
     }
 
     fclose(file);
