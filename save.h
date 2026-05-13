@@ -10,7 +10,7 @@
     Les fonctions seront codées dans save.c.
 */
 
-#include "types.h"
+#include "type.h"
 
 /*
     Sauvegarde la partie actuelle dans un fichier.
