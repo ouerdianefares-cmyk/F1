@@ -3,7 +3,7 @@
 #include <time.h>
 
 #include "constants.h"
-#include "type.h"
+#include "types.h"
 #include "game.h"
 #include "display.h"
 #include "input.h"
