@@ -12,7 +12,7 @@
     Ici, les fonctions seront codées dans display.c.
 */
 
-#include "type.h"
+#include "types.h"
 
 /*
     Efface l'écran du terminal.
