@@ -12,7 +12,7 @@
     jouer les tours, changer de joueur et vérifier les gagnants.
 */
 
-#include "types.h"
+#include "type.h"
 
 /*
     Initialise une nouvelle partie.
