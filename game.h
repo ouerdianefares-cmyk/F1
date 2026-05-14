@@ -69,5 +69,6 @@ int is_board_full(const Game *game);
     - 2 ou 3 s'il y a plusieurs gagnants en même temps
 */
 int check_winners(const Game *game, int winners[]);
-
+int get_winning_cells(const Game *game,
+                      int winning_cells[BOARD_HEIGHT][BOARD_WIDTH]);
 #endif
