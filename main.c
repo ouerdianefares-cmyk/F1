@@ -99,46 +99,37 @@ static void display_result(const Game *game, int winners[], int winner_count) {
 */
 static void game_loop(Game *game) {
     int winners[MAX_PLAYERS];
+    int winning_cells[BOARD_HEIGHT][BOARD_WIDTH];
     int winner_count;
     int finished;
+    int turn_result;
 
     finished = FALSE;
 
     while (!finished) {
-        /*
-            Le joueur actuel joue un tour complet :
-            choix colonne, chute, rotation, gravité.
-        */
-        play_turn(game);
+        turn_result = play_turn(game);
 
-        /*
-            Après le tour, on vérifie s’il y a un ou plusieurs gagnants.
-        */
+        if (turn_result == FALSE) {
+            printf("\nLa partie a ete sauvegardee. Vous pourrez la reprendre plus tard.\n");
+            return;
+        }
+
         winner_count = check_winners(game, winners);
 
         if (winner_count > 0) {
-            /*
-                Il y a au moins un gagnant.
-                La partie se termine.
-            */
+            get_winning_cells(game, winning_cells);
+
             clear_screen();
-            display_game(game);
+            printf("\n✨✨✨ ALIGNEMENT DETECTE ! ✨✨✨\n");
+            display_game_with_winning_cells(game, winning_cells);
             display_result(game, winners, winner_count);
             finished = TRUE;
         } else if (is_board_full(game)) {
-            /*
-                Si le plateau est plein et qu’il n’y a pas de gagnant,
-                la partie se termine sur une égalité.
-            */
             clear_screen();
             display_game(game);
             printf("\nMatch nul : plus aucune colonne jouable.\n");
             finished = TRUE;
         } else {
-            /*
-                Aucun gagnant et le plateau n’est pas plein.
-                On passe au joueur suivant.
-            */
             change_player(game);
         }
     }
