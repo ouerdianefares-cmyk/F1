@@ -1,36 +1,32 @@
 #include <stdio.h>
+
 #include "display.h"
 #include "constants.h"
 
-/*
-    Efface l’écran du terminal.
+#define RESET   "\033[0m"
+#define BOLD    "\033[1m"
+#define DIM     "\033[2m"
 
-    Les codes \033[2J et \033[H sont des codes ANSI :
-    - \033[2J efface l’écran
-    - \033[H remet le curseur en haut à gauche
-*/
+#define RED     "\033[91m"
+#define BLUE    "\033[96m"
+#define YELLOW  "\033[93m"
+#define GREEN   "\033[92m"
+#define PURPLE  "\033[95m"
+#define GREY    "\033[90m"
+#define WHITE   "\033[97m"
+
+#define BG_WIN  "\033[42m"
+
 void clear_screen(void) {
     printf("\033[2J");
     printf("\033[H");
 }
 
-/*
-    Met le programme en pause.
-
-    getchar() attend que l’utilisateur appuie sur Entrée.
-*/
 void pause_screen(void) {
     printf("\nAppuyez sur ENTREE pour continuer...");
     getchar();
 }
 
-/*
-    Donne un symbole à chaque joueur.
-
-    Joueur 1 : X
-    Joueur 2 : O
-    Joueur 3 : A
-*/
 char get_player_symbol(int player) {
     if (player == 1) {
         return 'X';
@@ -43,64 +39,112 @@ char get_player_symbol(int player) {
     return 'A';
 }
 
-/*
-    Affiche le plateau du jeu dans le terminal.
-*/
-void display_game(const Game *game) {
+static void print_title(void) {
+    printf(BOLD BLUE "\n");
+    printf("   ╔══════════════════════════════╗\n");
+    printf("   ║          CY-CONNECT          ║\n");
+    printf("   ╚══════════════════════════════╝\n");
+    printf(RESET);
+}
+
+static void print_cell_content(char cell) {
+    if (cell == EMPTY_CELL) {
+        printf(DIM " · " RESET);
+    } else if (cell == BLOCK_CELL) {
+        printf(GREY BOLD " ▓ " RESET);
+    } else if (cell == 'X') {
+        printf(RED BOLD " ✖ " RESET);
+    } else if (cell == 'O') {
+        printf(BLUE BOLD " ◉ " RESET);
+    } else if (cell == 'A') {
+        printf(YELLOW BOLD " ▲ " RESET);
+    } else {
+        printf(" %c ", cell);
+    }
+}
+
+static void display_game_advanced(const Game *game,
+                                  int has_pivot,
+                                  Position pivot,
+                                  int winning_cells[BOARD_HEIGHT][BOARD_WIDTH]) {
     int row;
     int column;
+    int is_winning_cell;
 
-    printf("\n");
-    printf("      CY-CONNECT\n");
+    print_title();
 
-    /*
-        Affichage des numéros de colonnes.
-    */
-    printf("   ");
+    printf("\n      ");
     for (column = 0; column < BOARD_WIDTH; column++) {
-        printf(" %d", column + 1);
+        printf(" %d ", column + 1);
     }
 
-    printf("\n   ");
-
-    /*
-        Ligne de séparation du haut.
-    */
+    printf("\n    ╔");
     for (column = 0; column < BOARD_WIDTH; column++) {
-        printf("--");
+        printf("═══");
     }
+    printf("╗\n");
 
-    printf("-\n");
-
-    /*
-        Affichage de chaque case du plateau.
-    */
     for (row = 0; row < BOARD_HEIGHT; row++) {
-        printf(" %d |", row + 1);
+        printf(" %d  ║", row + 1);
 
         for (column = 0; column < BOARD_WIDTH; column++) {
-            printf(" %c", game->board[row][column]);
+            is_winning_cell = FALSE;
+
+            if (winning_cells != NULL && winning_cells[row][column]) {
+                is_winning_cell = TRUE;
+            }
+
+            if (has_pivot && row == pivot.row && column == pivot.column) {
+                printf(PURPLE BOLD " P " RESET);
+            } else if (is_winning_cell) {
+                printf(BG_WIN WHITE BOLD);
+                print_cell_content(game->board[row][column]);
+                printf(RESET);
+            } else {
+                print_cell_content(game->board[row][column]);
+            }
         }
 
-        printf(" |\n");
+        printf("║\n");
     }
 
-    /*
-        Ligne de séparation du bas.
-    */
-    printf("   ");
+    printf("    ╚");
     for (column = 0; column < BOARD_WIDTH; column++) {
-        printf("--");
+        printf("═══");
     }
+    printf("╝\n");
 
-    printf("-\n");
-
-    /*
-        Informations sur la partie.
-    */
-    printf("\nJoueur actuel : %d (%c)\n",
+    printf("\n%sJoueur actuel :%s %d (%c)\n",
+           BOLD,
+           RESET,
            game->current_player,
            get_player_symbol(game->current_player));
 
-    printf("Tour : %d\n", game->turn_number);
+    printf("%sTour :%s %d\n", BOLD, RESET, game->turn_number);
+
+    printf("\nCommandes : choisissez une colonne 1-%d | S = sauvegarder | Q = sauvegarder et quitter\n",
+           BOARD_WIDTH);
+}
+
+void display_game(const Game *game) {
+    Position fake_pivot;
+
+    fake_pivot.row = -1;
+    fake_pivot.column = -1;
+
+    display_game_advanced(game, FALSE, fake_pivot, NULL);
+}
+
+void display_game_with_pivot(const Game *game, Position pivot) {
+    display_game_advanced(game, TRUE, pivot, NULL);
+}
+
+void display_game_with_winning_cells(const Game *game,
+                                     int winning_cells[BOARD_HEIGHT][BOARD_WIDTH]) {
+    Position fake_pivot;
+
+    fake_pivot.row = -1;
+    fake_pivot.column = -1;
+
+    display_game_advanced(game, FALSE, fake_pivot, winning_cells);
 }
