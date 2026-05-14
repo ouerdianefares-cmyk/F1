@@ -1,16 +1,9 @@
 #include <stdio.h>
 #include <string.h>
+
 #include "input.h"
 #include "constants.h"
 
-/*
-    fgets garde souvent le caractère '\n' à la fin de la chaîne.
-
-    Exemple :
-    si l’utilisateur tape "S", fgets peut stocker "S\n".
-
-    Cette fonction supprime ce '\n'.
-*/
 static void remove_newline(char text[]) {
     int i;
 
@@ -22,25 +15,14 @@ static void remove_newline(char text[]) {
     }
 }
 
-/*
-    Vérifie si l’utilisateur a tapé S ou s.
-
-    Cela sert à demander une sauvegarde.
-*/
 static int is_save_command(const char text[]) {
     return strcmp(text, "s") == 0 || strcmp(text, "S") == 0;
 }
 
-/*
-    Demande un nombre entier à l’utilisateur.
+static int is_quit_command(const char text[]) {
+    return strcmp(text, "q") == 0 || strcmp(text, "Q") == 0;
+}
 
-    La fonction refuse :
-    - les lettres
-    - les nombres trop petits
-    - les nombres trop grands
-
-    Elle recommence tant que la saisie est incorrecte.
-*/
 int read_integer(const char *message, int minimum, int maximum) {
     char input[INPUT_SIZE];
     int value;
@@ -49,18 +31,11 @@ int read_integer(const char *message, int minimum, int maximum) {
     while (TRUE) {
         printf("%s", message);
 
-        /*
-            fgets lit une ligne complète au clavier.
-        */
         if (fgets(input, INPUT_SIZE, stdin) == NULL) {
             printf("Erreur de lecture. Reessayez.\n");
             continue;
         }
 
-        /*
-            sscanf essaye de transformer le texte en entier.
-            Si result vaut 1, la conversion a réussi.
-        */
         result = sscanf(input, "%d", &value);
 
         if (result != 1) {
@@ -68,9 +43,6 @@ int read_integer(const char *message, int minimum, int maximum) {
             continue;
         }
 
-        /*
-            On vérifie que le nombre est dans l’intervalle autorisé.
-        */
         if (value < minimum || value > maximum) {
             printf("Valeur incorrecte. Entrez un nombre entre %d et %d.\n",
                    minimum,
@@ -82,25 +54,38 @@ int read_integer(const char *message, int minimum, int maximum) {
     }
 }
 
-/*
-    Même principe que read_integer,
-    mais l’utilisateur peut aussi taper S pour sauvegarder.
-*/
-int read_integer_or_save(const char *message, int minimum, int maximum, int *save_requested) {
+int read_integer_or_save(const char *message,
+                         int minimum,
+                         int maximum,
+                         int *save_requested) {
+    int action;
+    int value;
+
+    value = read_integer_or_action(message, minimum, maximum, &action);
+
+    if (action == ACTION_SAVE) {
+        *save_requested = TRUE;
+    } else {
+        *save_requested = FALSE;
+    }
+
+    return value;
+}
+
+int read_integer_or_action(const char *message,
+                           int minimum,
+                           int maximum,
+                           int *action) {
     char input[INPUT_SIZE];
     int value;
     int result;
 
-    /*
-        Au départ, aucune sauvegarde n’est demandée.
-    */
-    *save_requested = FALSE;
-
     while (TRUE) {
-        printf("%s\n", message);
-        printf("Entrez une valeur entre %d et %d, ou S pour sauvegarder.\n> ",
-               minimum,
-               maximum);
+        *action = ACTION_NONE;
+
+        printf("\n%s\n", message);
+        printf("Entrez une valeur entre %d et %d.\n", minimum, maximum);
+        printf("S = sauvegarder | Q = sauvegarder et quitter\n> ");
 
         if (fgets(input, INPUT_SIZE, stdin) == NULL) {
             printf("Erreur de lecture. Reessayez.\n");
@@ -109,12 +94,13 @@ int read_integer_or_save(const char *message, int minimum, int maximum, int *sav
 
         remove_newline(input);
 
-        /*
-            Si l’utilisateur tape S,
-            on indique au programme qu’il veut sauvegarder.
-        */
         if (is_save_command(input)) {
-            *save_requested = TRUE;
+            *action = ACTION_SAVE;
+            return 0;
+        }
+
+        if (is_quit_command(input)) {
+            *action = ACTION_QUIT;
             return 0;
         }
 
