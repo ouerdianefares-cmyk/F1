@@ -23,11 +23,18 @@ static int ask_rotation_size(void);
 static int is_valid_pivot(int row, int column, int size);
 static int zone_contains_position(Position pivot, int size, Position position);
 static Position ask_pivot(Game *game, int size, Position piece_position);
-static int ask_rotation_direction(void);
+static int ask_rotation_direction(Game *game);
 static void rotate_zone(Game *game, Position pivot, int size, int direction);
 static void apply_gravity_in_zone(Game *game, Position pivot, int size);
 static int check_direction(const Game *game, int row, int column, int delta_row, int delta_column, char symbol);
 static int check_player_win(const Game *game, char symbol);
+static int mark_winning_direction(const Game *game,
+                                  int row,
+                                  int column,
+                                  int delta_row,
+                                  int delta_column,
+                                  char symbol,
+                                  int winning_cells[BOARD_HEIGHT][BOARD_WIDTH]);
 
 /*
     Initialise une nouvelle partie.
@@ -110,23 +117,32 @@ static Position drop_piece(Game *game, int column, char symbol) {
 
 /*
     Demande au joueur une colonne valide.
-    Il peut aussi taper S pour sauvegarder.
+
+    Le joueur peut :
+    - entrer une colonne entre 1 et BOARD_WIDTH
+    - taper S pour sauvegarder
+    - taper Q pour sauvegarder et quitter
 */
 static int ask_playable_column(Game *game) {
     int column;
-    int save_requested;
+    int action;
 
     while (TRUE) {
-        column = read_integer_or_save(
-            "Choisissez une colonne.",
+        column = read_integer_or_action(
+            "Choisissez une colonne pour placer votre piece.",
             1,
             BOARD_WIDTH,
-            &save_requested
+            &action
         );
 
-        if (save_requested) {
+        if (action == ACTION_SAVE) {
             save_game(game);
             continue;
+        }
+
+        if (action == ACTION_QUIT) {
+            save_game(game);
+            return -1;
         }
 
         column--;
@@ -181,34 +197,53 @@ static int zone_contains_position(Position pivot, int size, Position position) {
 
 /*
     Demande au joueur un pivot valide.
+
+    Le joueur peut :
+    - choisir la ligne et la colonne du pivot
+    - taper S pour sauvegarder
+    - taper Q pour sauvegarder et quitter
 */
 static Position ask_pivot(Game *game, int size, Position piece_position) {
     Position pivot;
-    int save_requested;
+    int action;
 
     while (TRUE) {
-        pivot.row = read_integer_or_save(
+        pivot.row = read_integer_or_action(
             "Choisissez la ligne du pivot.",
             1,
             BOARD_HEIGHT,
-            &save_requested
+            &action
         );
 
-        if (save_requested) {
+        if (action == ACTION_SAVE) {
             save_game(game);
             continue;
         }
 
-        pivot.column = read_integer_or_save(
+        if (action == ACTION_QUIT) {
+            save_game(game);
+            pivot.row = -1;
+            pivot.column = -1;
+            return pivot;
+        }
+
+        pivot.column = read_integer_or_action(
             "Choisissez la colonne du pivot.",
             1,
             BOARD_WIDTH,
-            &save_requested
+            &action
         );
 
-        if (save_requested) {
+        if (action == ACTION_SAVE) {
             save_game(game);
             continue;
+        }
+
+        if (action == ACTION_QUIT) {
+            save_game(game);
+            pivot.row = -1;
+            pivot.column = -1;
+            return pivot;
         }
 
         pivot.row--;
@@ -230,22 +265,33 @@ static Position ask_pivot(Game *game, int size, Position piece_position) {
 
 /*
     Demande le sens de rotation.
+
+    Le joueur peut :
+    - entrer 1 pour gauche
+    - entrer 2 pour droite
+    - taper S pour sauvegarder
+    - taper Q pour sauvegarder et quitter
 */
-static int ask_rotation_direction(void) {
+static int ask_rotation_direction(Game *game) {
     int choice;
-    int save_requested;
+    int action;
 
     while (TRUE) {
-        choice = read_integer_or_save(
+        choice = read_integer_or_action(
             "Sens de rotation : 1 = gauche, 2 = droite.",
             1,
             2,
-            &save_requested
+            &action
         );
 
-        if (save_requested) {
-            printf("Sauvegarde impossible ici : finissez le choix du sens.\n");
+        if (action == ACTION_SAVE) {
+            save_game(game);
             continue;
+        }
+
+        if (action == ACTION_QUIT) {
+            save_game(game);
+            return 0;
         }
 
         if (choice == 1) {
@@ -274,10 +320,6 @@ static void rotate_zone(Game *game, Position pivot, int size, int direction) {
 
     radius = size / 2;
 
-    /*
-        On copie d'abord la zone dans un tableau temporaire,
-        pour ne pas écraser les cases pendant la rotation.
-    */
     for (row = 0; row < size; row++) {
         for (column = 0; column < size; column++) {
             source_row = pivot.row - radius + row;
@@ -286,10 +328,6 @@ static void rotate_zone(Game *game, Position pivot, int size, int direction) {
         }
     }
 
-    /*
-        On recopie ensuite les cases dans le plateau,
-        mais dans un ordre différent pour créer la rotation.
-    */
     for (row = 0; row < size; row++) {
         for (column = 0; column < size; column++) {
             source_row = pivot.row - radius + row;
@@ -331,26 +369,13 @@ static void apply_gravity_in_zone(Game *game, Position pivot, int size) {
     left = pivot.column - radius;
     right = pivot.column + radius;
 
-    /*
-        On traite la gravité colonne par colonne.
-    */
     for (column = left; column <= right; column++) {
         write_row = bottom;
 
-        /*
-            On lit la colonne de bas en haut.
-        */
         for (row = bottom; row >= top; row--) {
             if (game->board[row][column] == BLOCK_CELL) {
-                /*
-                    Un bloc # empêche les pièces de passer.
-                    Les prochaines pièces tomberont donc au-dessus du bloc.
-                */
                 write_row = row - 1;
             } else if (game->board[row][column] != EMPTY_CELL) {
-                /*
-                    Si c’est une pièce, on la descend à write_row.
-                */
                 if (row != write_row) {
                     game->board[write_row][column] = game->board[row][column];
                     game->board[row][column] = EMPTY_CELL;
@@ -370,6 +395,10 @@ static void apply_gravity_in_zone(Game *game, Position pivot, int size) {
     4. choix du sens
     5. rotation
     6. gravité
+
+    Retourne :
+    - TRUE si le tour s'est bien terminé
+    - FALSE si le joueur a sauvegardé et quitté
 */
 int play_turn(Game *game) {
     int column;
@@ -388,8 +417,13 @@ int play_turn(Game *game) {
     printf("Taille de rotation imposee : %d x %d\n", size, size);
 
     column = ask_playable_column(game);
-    symbol = get_player_symbol(game->current_player);
 
+    if (column == -1) {
+        printf("Partie sauvegardee. Retour au menu.\n");
+        return FALSE;
+    }
+
+    symbol = get_player_symbol(game->current_player);
     piece_position = drop_piece(game, column, symbol);
 
     clear_screen();
@@ -398,13 +432,29 @@ int play_turn(Game *game) {
     pause_screen();
 
     pivot = ask_pivot(game, size, piece_position);
-    direction = ask_rotation_direction();
+
+    if (pivot.row == -1 || pivot.column == -1) {
+        printf("Partie sauvegardee. Retour au menu.\n");
+        return FALSE;
+    }
+
+    clear_screen();
+    printf("Pivot choisi : ligne %d, colonne %d.\n", pivot.row + 1, pivot.column + 1);
+    display_game_with_pivot(game, pivot);
+    pause_screen();
+
+    direction = ask_rotation_direction(game);
+
+    if (direction == 0) {
+        printf("Partie sauvegardee. Retour au menu.\n");
+        return FALSE;
+    }
 
     rotate_zone(game, pivot, size, direction);
 
     clear_screen();
     printf("Etape 2 : zone tournee.\n");
-    display_game(game);
+    display_game_with_pivot(game, pivot);
     pause_screen();
 
     apply_gravity_in_zone(game, pivot, size);
@@ -538,4 +588,102 @@ int check_winners(const Game *game, int winners[]) {
     }
 
     return winner_count;
+}
+
+/*
+    Marque les cases gagnantes dans une direction précise.
+
+    Cela permet ensuite à display.c d'afficher les cases gagnantes
+    avec une couleur spéciale.
+*/
+static int mark_winning_direction(const Game *game,
+                                  int row,
+                                  int column,
+                                  int delta_row,
+                                  int delta_column,
+                                  char symbol,
+                                  int winning_cells[BOARD_HEIGHT][BOARD_WIDTH]) {
+    int count;
+    int current_row;
+    int current_column;
+    int i;
+
+    count = 0;
+    current_row = row;
+    current_column = column;
+
+    while (is_inside_board(current_row, current_column) &&
+           game->board[current_row][current_column] == symbol) {
+        count++;
+
+        if (count >= ALIGNMENT_LENGTH) {
+            current_row = row;
+            current_column = column;
+
+            for (i = 0; i < ALIGNMENT_LENGTH; i++) {
+                winning_cells[current_row][current_column] = TRUE;
+                current_row += delta_row;
+                current_column += delta_column;
+            }
+
+            return TRUE;
+        }
+
+        current_row += delta_row;
+        current_column += delta_column;
+    }
+
+    return FALSE;
+}
+
+/*
+    Remplit le tableau winning_cells avec les cases gagnantes.
+
+    Retourne :
+    - TRUE si au moins un alignement gagnant est trouvé
+    - FALSE sinon
+*/
+int get_winning_cells(const Game *game,
+                      int winning_cells[BOARD_HEIGHT][BOARD_WIDTH]) {
+    int row;
+    int column;
+    int player;
+    int found;
+    char symbol;
+
+    found = FALSE;
+
+    for (row = 0; row < BOARD_HEIGHT; row++) {
+        for (column = 0; column < BOARD_WIDTH; column++) {
+            winning_cells[row][column] = FALSE;
+        }
+    }
+
+    for (player = 1; player <= game->player_count; player++) {
+        symbol = get_player_symbol(player);
+
+        for (row = 0; row < BOARD_HEIGHT; row++) {
+            for (column = 0; column < BOARD_WIDTH; column++) {
+                if (game->board[row][column] == symbol) {
+                    if (mark_winning_direction(game, row, column, 0, 1, symbol, winning_cells)) {
+                        found = TRUE;
+                    }
+
+                    if (mark_winning_direction(game, row, column, 1, 0, symbol, winning_cells)) {
+                        found = TRUE;
+                    }
+
+                    if (mark_winning_direction(game, row, column, 1, 1, symbol, winning_cells)) {
+                        found = TRUE;
+                    }
+
+                    if (mark_winning_direction(game, row, column, 1, -1, symbol, winning_cells)) {
+                        found = TRUE;
+                    }
+                }
+            }
+        }
+    }
+
+    return found;
 }
