@@ -20,7 +20,7 @@
 static int main_menu(void) {
     printf("===== CY-CONNECT =====\n");
     printf("1. Nouvelle partie\n");
-    printf("2. Reprendre une partie sauvegardee\n");
+    printf("2. Reprendre votre dernière partie sauvegardee\n");
     printf("3. Quitter\n");
 
     /*
