@@ -96,6 +96,6 @@ make
 
 Une fois la compilation terminée, lancez le jeu avec :
 
-./cy6connect
+./cy-connect
 
 Le jeu devrait alors se lancer correctement.
