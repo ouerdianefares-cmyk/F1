@@ -80,9 +80,23 @@ Les quatre coins du plateau sont bloqués au début de la partie.
 
 ## Compilation
 
-Le projet utilise un `Makefile`.
 
 Pour compiler le programme, exécuter la commande suivante dans le terminal :
 
 ```bash
 make
+Pour compiler le programme, ouvrez le terminal et tapez :
+
+Si la compilation ne fonctionne pas correctement, il est possible qu’il y ait eu un problème avec une ancienne compilation ou avec certains fichiers générés. Dans ce cas, tapez d’abord :
+
+make clean
+
+Puis relancez la compilation avec :
+
+make
+
+Une fois la compilation terminée, lancez le jeu avec :
+
+./cy6connect
+
+Le jeu devrait alors se lancer correctement.
