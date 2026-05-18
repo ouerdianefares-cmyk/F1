@@ -79,7 +79,7 @@ static int is_column_playable(const Game *game, int column)
 }
 
 /* ============================================================
-   CHUTE D'UNE PIÈCE
+   CHUTE D'UNE PIÈCE APRÈS INSERTION
    ============================================================ */
 
 static Position drop_piece(Game *game, int column, char symbol)
@@ -109,7 +109,7 @@ static Position drop_piece(Game *game, int column, char symbol)
 }
 
 /* ============================================================
-   DEMANDE DE LA COLONNE AU JOUEUR
+   DEMANDE DE LA COLONNE
    ============================================================ */
 
 static int ask_playable_column(Game *game)
@@ -165,7 +165,7 @@ static int ask_rotation_size(void)
 }
 
 /* ============================================================
-   VALIDATION DU PIVOT
+   PIVOT
    ============================================================ */
 
 static int is_valid_pivot(int row, int column, int size)
@@ -191,10 +191,6 @@ static int zone_contains_position(Position pivot, int size, Position position)
            position.column >= pivot.column - radius &&
            position.column <= pivot.column + radius;
 }
-
-/* ============================================================
-   DEMANDE DU PIVOT AU JOUEUR
-   ============================================================ */
 
 static Position ask_pivot(Game *game, int size, Position piece_position)
 {
@@ -265,7 +261,7 @@ static Position ask_pivot(Game *game, int size, Position piece_position)
 }
 
 /* ============================================================
-   DEMANDE DU SENS DE ROTATION
+   SENS DE ROTATION
    ============================================================ */
 
 static int ask_rotation_direction(Game *game)
@@ -304,7 +300,7 @@ static int ask_rotation_direction(Game *game)
 }
 
 /* ============================================================
-   ROTATION D'UNE ZONE
+   ROTATION DU CARRÉ
    ============================================================ */
 
 static void rotate_zone(Game *game, Position pivot, int size, int direction)
