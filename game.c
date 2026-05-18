@@ -357,16 +357,6 @@ static void rotate_zone(Game *game, Position pivot, int size, int direction)
    GRAVITÉ SUR TOUT LE PLATEAU
    ============================================================ */
 
-/*
-   Cette fonction applique la gravité sur TOUT le plateau.
-
-   Les règles :
-   - les pièces des joueurs tombent vers le bas ;
-   - les blocs indestructibles BLOCK_CELL ne tombent pas ;
-   - les pièces ne traversent pas les blocs ;
-   - après une rotation, on doit appeler cette fonction.
-*/
-
 static void apply_gravity(Game *game)
 {
     int column;
