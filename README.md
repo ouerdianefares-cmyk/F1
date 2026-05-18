@@ -85,7 +85,6 @@ Pour compiler le programme, exécuter la commande suivante dans le terminal :
 
 ```bash
 make
-Pour compiler le programme, ouvrez le terminal et tapez :
 
 Si la compilation ne fonctionne pas correctement, il est possible qu’il y ait eu un problème avec une ancienne compilation ou avec certains fichiers générés. Dans ce cas, tapez d’abord :
 
