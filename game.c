@@ -333,15 +333,21 @@ static void rotate_zone(Game *game, Position pivot, int size, int direction)
             source_row = pivot.row - radius + row;
             source_column = pivot.column - radius + column;
 
+            /*
+                Correction du sens de rotation :
+
+                ROTATE_RIGHT = rotation vers la droite, sens horaire.
+                ROTATE_LEFT  = rotation vers la gauche, sens antihoraire.
+            */
             if (direction == ROTATE_RIGHT)
-            {
-                local_row = size - 1 - column;
-                local_column = row;
-            }
-            else
             {
                 local_row = column;
                 local_column = size - 1 - row;
+            }
+            else
+            {
+                local_row = size - 1 - column;
+                local_column = row;
             }
 
             game->board[source_row][source_column] = temporary[local_row][local_column];
