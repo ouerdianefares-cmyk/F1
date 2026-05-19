@@ -200,7 +200,7 @@ static Position ask_pivot(Game *game, int size, Position piece_position)
     while (TRUE)
     {
         pivot.row = read_integer_or_action(
-            "Choisissez la ligne du pivot.",
+            "Choisissez la ligne du pivot, c'est-a-dire le centre du carre a tourner.",
             1,
             BOARD_HEIGHT,
             &action
@@ -221,7 +221,7 @@ static Position ask_pivot(Game *game, int size, Position piece_position)
         }
 
         pivot.column = read_integer_or_action(
-            "Choisissez la colonne du pivot.",
+            "Choisissez la colonne du pivot, c'est-a-dire le centre du carre a tourner.",
             1,
             BOARD_WIDTH,
             &action
@@ -405,10 +405,15 @@ int play_turn(Game *game)
     clear_screen();
     display_game(game);
 
-    printf("\nTour du joueur %d.\n", game->current_player);
-
     size = ask_rotation_size();
-    printf("Taille de rotation imposee : %d x %d\n", size, size);
+
+    printf("\n================================\n");
+    printf("Tour du joueur %d (%c)\n",
+           game->current_player,
+           get_player_symbol(game->current_player));
+    printf("Rotation imposee : %d x %d\n", size, size);
+    printf("Objectif : aligner %d pions\n", ALIGNMENT_LENGTH);
+    printf("================================\n");
 
     column = ask_playable_column(game);
 
@@ -458,7 +463,7 @@ int play_turn(Game *game)
     apply_gravity(game);
 
     clear_screen();
-    printf("Etape 3 : gravite appliquee.\n");
+    printf("Etape 3 : gravite appliquee sur tout le plateau.\n");
     display_game(game);
     pause_screen();
 
