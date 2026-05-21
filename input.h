@@ -1,23 +1,22 @@
-#ifndef INPUT_H
-#define INPUT_H
+#ifndef INPUT_H /* Évite que ce fichier soit inclus plusieurs fois */
+#define INPUT_H /* Définit INPUT_H pour activer la protection d'inclusion */
 
 
-/* ============================================================
-   FONCTIONS DE SAISIE AU CLAVIER
-   ============================================================ */
+/* FONCTIONS DE SAISIE AU CLAVIER */
 
 /*
    Ce fichier contient les prototypes des fonctions
    qui permettent de lire ce que l'utilisateur tape au clavier.
 
-   Ces fonctions servent à éviter que le joueur entre
-   n'importe quoi dans le programme.
+   L'intérêt de ces fonctions est de sécuriser les saisies :
+   le joueur ne peut pas faire planter le programme facilement
+   en entrant une lettre, une valeur trop grande ou une commande spéciale.
+
+   Les fonctions complètes sont codées dans input.c.
 */
 
 
-/* ============================================================
-   LECTURE D'UN NOMBRE SIMPLE
-   ============================================================ */
+/* LECTURE D'UN NOMBRE SIMPLE */
 
 /*
    Demande à l'utilisateur d'entrer un nombre entier.
@@ -29,19 +28,20 @@
 
    La fonction vérifie que :
    - l'utilisateur entre bien un nombre
-   - le nombre est entre minimum et maximum
+   - le nombre est compris entre minimum et maximum
 
    Exemple :
    read_integer("Choisissez une colonne : ", 1, 8);
 
    Ici, l'utilisateur devra entrer un nombre entre 1 et 8.
+
+   Utilité dans le jeu :
+   cette fonction évite qu'un joueur entre une valeur impossible.
 */
 int read_integer(const char *message, int minimum, int maximum);
 
 
-/* ============================================================
-   LECTURE D'UN NOMBRE OU D'UNE SAUVEGARDE
-   ============================================================ */
+/* LECTURE D'UN NOMBRE OU D'UNE SAUVEGARDE */
 
 /*
    Demande à l'utilisateur d'entrer :
@@ -52,7 +52,7 @@ int read_integer(const char *message, int minimum, int maximum);
    - message : texte affiché à l'utilisateur
    - minimum : plus petite valeur autorisée
    - maximum : plus grande valeur autorisée
-   - save_requested : indique si le joueur a demandé une sauvegarde
+   - save_requested : pointeur qui indique si le joueur a demandé une sauvegarde
 
    save_requested vaudra :
    - TRUE si le joueur tape S
@@ -61,6 +61,10 @@ int read_integer(const char *message, int minimum, int maximum);
    La fonction retourne :
    - le nombre choisi si l'utilisateur tape un nombre
    - 0 si l'utilisateur tape S
+
+   Remarque :
+   cette fonction est moins complète que read_integer_or_action,
+   car elle gère seulement la sauvegarde simple.
 */
 int read_integer_or_save(const char *message,
                          int minimum,
@@ -68,9 +72,7 @@ int read_integer_or_save(const char *message,
                          int *save_requested);
 
 
-/* ============================================================
-   LECTURE D'UN NOMBRE OU D'UNE ACTION
-   ============================================================ */
+/* LECTURE D'UN NOMBRE OU D'UNE ACTION */
 
 /*
    Demande à l'utilisateur d'entrer :
@@ -82,7 +84,7 @@ int read_integer_or_save(const char *message,
    - message : texte affiché à l'utilisateur
    - minimum : plus petite valeur autorisée
    - maximum : plus grande valeur autorisée
-   - action : indique l'action choisie par le joueur
+   - action : pointeur qui indique l'action choisie par le joueur
 
    action peut recevoir :
    - ACTION_NONE : le joueur a entré un nombre normal
@@ -95,6 +97,10 @@ int read_integer_or_save(const char *message,
 
    Les valeurs ACTION_NONE, ACTION_SAVE et ACTION_QUIT
    sont définies dans constants.h.
+
+   Utilité dans le jeu :
+   cette fonction permet au joueur de sauvegarder
+   ou de quitter proprement pendant une saisie.
 */
 int read_integer_or_action(const char *message,
                            int minimum,
