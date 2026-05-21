@@ -154,7 +154,7 @@ static void display_game_advanced(const Game *game, /* Pointeur vers la partie �
     print_title(); /* Affiche le titre du jeu */
 
     /* Affiche les numéros des colonnes en haut du plateau */
-    printf("\n      "); /* Ajoute un espace avant les numéros de colonnes */
+    printf("\n    "); /* Ajoute un espace avant les numéros de colonnes */
     for (column = 0; column < BOARD_WIDTH; column++) { /* Parcourt toutes les colonnes */
         printf(" %d ", column + 1); /* Affiche le numéro de la colonne */
     }
