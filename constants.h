@@ -70,17 +70,17 @@
 /*
     Valeur utilisée pour une rotation vers la gauche.
 
-    Le nombre -1 permet de différencier clairement
+    Le nombre 2 permet de différencier clairement
     la gauche de la droite dans le code.
 */
-#define ROTATE_LEFT -1
+#define ROTATE_LEFT 1
 
 /*
     Valeur utilisée pour une rotation vers la droite.
 
-    Le nombre 1 représente le sens opposé à ROTATE_LEFT.
+    Le nombre 2 représente le sens opposé à ROTATE_LEFT.
 */
-#define ROTATE_RIGHT 1
+#define ROTATE_RIGHT 2
 
 
 /* BOOLÉENS */
