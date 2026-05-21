@@ -17,7 +17,7 @@
 /* TAILLE DU PLATEAU */
 
 /* Largeur du plateau : 8 colonnes */
-#define BOARD_WIDTH 8
+#defne BOARD_WIDTH 8
 
 /* Hauteur du plateau : 6 lignes */
 #define BOARD_HEIGHT 6
