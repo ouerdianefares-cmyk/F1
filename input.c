@@ -1,295 +1,256 @@
-#include <stdio.h>
-#include <string.h>
+#include <stdio.h>   /* Permet d'utiliser printf, fgets et stdin */
+#include <string.h>  /* Permet d'utiliser strcmp pour comparer du texte */
 
-#include "input.h"
-#include "constants.h"
+#include "input.h"      /* Contient les prototypes des fonctions de saisie */
+#include "constants.h"  /* Contient INPUT_SIZE, TRUE, ACTION_SAVE, ACTION_QUIT... */
 
 
-/* ============================================================
-   SUPPRESSION DU RETOUR À LA LIGNE
-   ============================================================ */
+/* SUPPRESSION DU RETOUR À LA LIGNE */
 
 /*
-   Quand on utilise fgets(), le texte récupéré contient souvent
-   le caractère '\n' à la fin.
+   Quand l'utilisateur écrit quelque chose puis appuie sur Entrée,
+   fgets récupère aussi le caractère '\n'.
 
    Exemple :
-   si l'utilisateur tape S puis ENTREE,
-   fgets récupère : "S\n"
+   si le joueur tape S puis Entrée,
+   la chaîne récupérée est "S\n".
 
-   Cette fonction transforme "S\n" en "S".
+   Pour comparer correctement le texte avec "S" ou "Q",
+   on doit supprimer ce retour à la ligne.
 */
-static void remove_newline(char text[]) {
-    int i;
+static void remove_newline(char text[])
+{
+    int i; /* Sert à parcourir chaque caractère de la chaîne */
 
-    /* On parcourt le texte caractère par caractère */
-    for (i = 0; text[i] != '\0'; i++) {
-        /* Si on trouve le retour à la ligne */
-        if (text[i] == '\n') {
-            /* On le remplace par la fin de chaîne */
-            text[i] = '\0';
-            return;
+    for (i = 0; text[i] != '\0'; i++) /* Parcourt la chaîne jusqu'à la fin */
+    {
+        if (text[i] == '\n') /* Vérifie si le caractère actuel est un retour à la ligne */
+        {
+            text[i] = '\0'; /* Remplace '\n' par la fin de chaîne */
+            return; /* Arrête la fonction dès que le retour à la ligne est supprimé */
         }
     }
 }
 
 
-/* ============================================================
-   VÉRIFICATION DE LA COMMANDE SAUVEGARDER
-   ============================================================ */
+/* VÉRIFICATION DE LA COMMANDE SAUVEGARDER */
 
 /*
-   Vérifie si le joueur a tapé S ou s.
+   Cette fonction vérifie si le joueur veut sauvegarder.
 
-   Si oui, cela veut dire :
-   le joueur veut sauvegarder la partie.
+   Le joueur peut taper :
+   - S en majuscule
+   - s en minuscule
+
+   strcmp compare deux chaînes de caractères.
+   Si les deux textes sont identiques, strcmp retourne 0.
 */
-static int is_save_command(const char text[]) {
+static int is_save_command(const char text[])
+{
     return strcmp(text, "s") == 0 || strcmp(text, "S") == 0;
 }
 
 
-/* ============================================================
-   VÉRIFICATION DE LA COMMANDE QUITTER
-   ============================================================ */
+/* VÉRIFICATION DE LA COMMANDE QUITTER */
 
 /*
-   Vérifie si le joueur a tapé Q ou q.
+   Cette fonction vérifie si le joueur veut quitter.
 
-   Si oui, cela veut dire :
-   le joueur veut sauvegarder puis quitter.
+   Dans ce jeu, Q signifie :
+   sauvegarder la partie puis revenir au menu.
+
+   Le joueur peut taper :
+   - Q en majuscule
+   - q en minuscule
 */
-static int is_quit_command(const char text[]) {
+static int is_quit_command(const char text[])
+{
     return strcmp(text, "q") == 0 || strcmp(text, "Q") == 0;
 }
 
 
-/* ============================================================
-   LECTURE D'UN NOMBRE SIMPLE
-   ============================================================ */
+/* LECTURE D'UN NOMBRE SIMPLE */
 
 /*
-   Demande un nombre au joueur.
+   Cette fonction demande un nombre entier à l'utilisateur.
 
-   Cette fonction oblige le joueur à entrer :
-   - un nombre valide
-   - compris entre minimum et maximum
+   Elle vérifie trois choses :
+   1. la saisie a bien été lue
+   2. la saisie est bien un nombre
+   3. le nombre est compris entre minimum et maximum
 
-   Exemple :
-   read_integer("Choisissez une colonne : ", 1, 8)
-
-   Le joueur devra entrer un nombre entre 1 et 8.
+   Tant que la saisie n'est pas correcte,
+   la fonction redemande une valeur.
 */
-int read_integer(const char *message, int minimum, int maximum) {
-    char input[INPUT_SIZE];
-    int value;
-    int result;
+int read_integer(const char *message, int minimum, int maximum)
+{
+    char input[INPUT_SIZE]; /* Tableau qui stocke ce que l'utilisateur tape */
+    int value; /* Nombre obtenu après conversion de la saisie */
+    int result; /* Résultat de sscanf : indique si la conversion a réussi */
 
-    /*
-       Boucle infinie :
-       on continue tant que l'utilisateur
-       ne donne pas une valeur correcte.
-    */
-    while (TRUE) {
-        /* Affiche le message donné en paramètre */
-        printf("%s", message);
+    while (TRUE) /* Boucle infinie contrôlée par les return et continue */
+    {
+        printf("%s", message); /* Affiche le message de demande */
 
         /*
-           Lit ce que l'utilisateur tape au clavier.
-           stdin signifie : entrée clavier.
+           fgets lit une ligne complète tapée au clavier.
+
+           INPUT_SIZE limite la taille de la saisie,
+           ce qui évite de dépasser la taille du tableau input.
         */
-        if (fgets(input, INPUT_SIZE, stdin) == NULL) {
+        if (fgets(input, INPUT_SIZE, stdin) == NULL)
+        {
             printf("Erreur de lecture. Reessayez.\n");
-            continue;
+            continue; /* Recommence la saisie */
         }
 
         /*
-           sscanf essaie de transformer le texte en nombre entier.
+           sscanf essaie de transformer le texte en entier.
 
            Exemple :
-           input = "4"
-           value devient 4
+           - "4" devient le nombre 4
+           - "abc" ne peut pas être transformé en entier
 
-           result vaut 1 si la conversion a réussi.
+           Si result vaut 1, la conversion a fonctionné.
         */
         result = sscanf(input, "%d", &value);
 
-        /* Si l'utilisateur n'a pas entré un nombre */
-        if (result != 1) {
+        if (result != 1) /* Si l'utilisateur n'a pas entré un nombre valide */
+        {
             printf("Veuillez entrer un nombre valide.\n");
-            continue;
+            continue; /* Redemande une valeur */
         }
 
-        /* Si le nombre est trop petit ou trop grand */
-        if (value < minimum || value > maximum) {
+        if (value < minimum || value > maximum) /* Vérifie les limites autorisées */
+        {
             printf("Valeur incorrecte. Entrez un nombre entre %d et %d.\n",
                    minimum,
                    maximum);
-            continue;
+            continue; /* Redemande une valeur */
         }
 
-        /* Si tout est bon, on retourne la valeur */
-        return value;
+        return value; /* La valeur est correcte, on la retourne */
     }
 }
 
 
-/* ============================================================
-   LECTURE D'UN NOMBRE OU SAUVEGARDE
-   ============================================================ */
+/* LECTURE D'UN NOMBRE OU D'UNE SAUVEGARDE */
 
 /*
    Cette fonction permet de lire :
-   - soit un nombre
-   - soit la commande S pour sauvegarder
+   - un nombre normal
+   - ou la commande S pour sauvegarder
 
-   Elle utilise read_integer_or_action(),
-   mais elle ne regarde vraiment que l'action ACTION_SAVE.
+   Elle repose sur read_integer_or_action,
+   qui sait déjà gérer S et Q.
 
-   save_requested devient :
-   - TRUE si le joueur a demandé une sauvegarde
-   - FALSE sinon
+   Ici, on récupère surtout l'information :
+   est-ce que le joueur a demandé une sauvegarde ?
 */
 int read_integer_or_save(const char *message,
                          int minimum,
                          int maximum,
-                         int *save_requested) {
-    int action;
-    int value;
+                         int *save_requested)
+{
+    int action; /* Stocke l'action détectée : aucune, sauvegarde ou quitter */
+    int value; /* Stocke le nombre lu si l'utilisateur entre un nombre */
 
-    /*
-       On appelle la fonction plus complète,
-       capable de détecter S et Q.
-    */
-    value = read_integer_or_action(message, minimum, maximum, &action);
+    value = read_integer_or_action(message, minimum, maximum, &action); /* Lit un nombre ou une action */
 
-    /*
-       Si l'action détectée est sauvegarder,
-       on met save_requested à TRUE.
-    */
-    if (action == ACTION_SAVE) {
-        *save_requested = TRUE;
-    } else {
-        *save_requested = FALSE;
+    if (action == ACTION_SAVE) /* Si le joueur a tapé S */
+    {
+        *save_requested = TRUE; /* Indique au programme qu'une sauvegarde est demandée */
+    }
+    else
+    {
+        *save_requested = FALSE; /* Sinon, aucune sauvegarde n'a été demandée */
     }
 
-    /*
-       Si le joueur a tapé S, value vaut 0.
-       Sinon, value contient le nombre entré.
-    */
-    return value;
+    return value; /* Retourne le nombre lu, ou 0 si le joueur a tapé S ou Q */
 }
 
 
-/* ============================================================
-   LECTURE D'UN NOMBRE OU D'UNE ACTION
-   ============================================================ */
+/* LECTURE D'UN NOMBRE OU D'UNE ACTION */
 
 /*
-   Fonction la plus complète pour la saisie.
+   Cette fonction est la plus complète pour gérer les saisies.
 
    Le joueur peut entrer :
    - un nombre entre minimum et maximum
    - S pour sauvegarder
    - Q pour sauvegarder et quitter
 
-   La fonction retourne :
-   - le nombre choisi si l'utilisateur entre un nombre
-   - 0 si l'utilisateur tape S ou Q
+   Le paramètre action permet de prévenir le reste du programme
+   de ce que le joueur a choisi.
 
-   Le paramètre action indique ce que l'utilisateur a fait :
-   - ACTION_NONE : il a entré un nombre
-   - ACTION_SAVE : il a tapé S
-   - ACTION_QUIT : il a tapé Q
+   Valeurs possibles de action :
+   - ACTION_NONE : le joueur a entré un nombre
+   - ACTION_SAVE : le joueur a tapé S
+   - ACTION_QUIT : le joueur a tapé Q
 */
 int read_integer_or_action(const char *message,
                            int minimum,
                            int maximum,
-                           int *action) {
-    char input[INPUT_SIZE];
-    int value;
-    int result;
+                           int *action)
+{
+    char input[INPUT_SIZE]; /* Stocke la saisie complète de l'utilisateur */
+    int value; /* Stocke le nombre après conversion */
+    int result; /* Indique si sscanf a réussi à lire un entier */
 
-    /*
-       On répète la demande tant que l'utilisateur
-       n'entre pas quelque chose de correct.
-    */
-    while (TRUE) {
-        /*
-           Au début de chaque saisie,
-           on considère qu'aucune action spéciale
-           n'a été demandée.
-        */
-        *action = ACTION_NONE;
+    while (TRUE) /* Répète la saisie jusqu'à obtenir une entrée correcte */
+    {
+        *action = ACTION_NONE; /* Par défaut, aucune action spéciale n'est demandée */
+
+        printf("\n%s\n", message); /* Affiche le message principal */
+        printf("Entrez une valeur entre %d et %d.\n", minimum, maximum); /* Affiche les limites */
+        printf("S = sauvegarder | Q = sauvegarder et quitter\n> "); /* Affiche les commandes possibles */
 
         /*
-           Affiche les consignes au joueur.
-        */
-        printf("\n%s\n", message);
-        printf("Entrez une valeur entre %d et %d.\n", minimum, maximum);
-        printf("S = sauvegarder | Q = sauvegarder et quitter\n> ");
+           Lecture de la saisie utilisateur.
 
-        /*
-           Lit la saisie complète du joueur.
+           On utilise fgets plutôt que scanf,
+           car fgets permet de lire toute la ligne et évite certains bugs de saisie.
         */
-        if (fgets(input, INPUT_SIZE, stdin) == NULL) {
+        if (fgets(input, INPUT_SIZE, stdin) == NULL)
+        {
             printf("Erreur de lecture. Reessayez.\n");
-            continue;
+            continue; /* Redemande une saisie */
+        }
+
+        remove_newline(input); /* Supprime le retour à la ligne ajouté par fgets */
+
+        if (is_save_command(input)) /* Vérifie si le joueur a tapé S ou s */
+        {
+            *action = ACTION_SAVE; /* Signale une demande de sauvegarde */
+            return 0; /* Pas de nombre à retourner dans ce cas */
+        }
+
+        if (is_quit_command(input)) /* Vérifie si le joueur a tapé Q ou q */
+        {
+            *action = ACTION_QUIT; /* Signale une demande de sauvegarde puis quitter */
+            return 0; /* Pas de nombre à retourner dans ce cas */
         }
 
         /*
-           Supprime le '\n' à la fin de la saisie.
-           Exemple : "S\n" devient "S".
-        */
-        remove_newline(input);
-
-        /*
-           Si le joueur tape S ou s,
-           on indique une action de sauvegarde.
-        */
-        if (is_save_command(input)) {
-            *action = ACTION_SAVE;
-            return 0;
-        }
-
-        /*
-           Si le joueur tape Q ou q,
-           on indique une action de sauvegarde + quitter.
-        */
-        if (is_quit_command(input)) {
-            *action = ACTION_QUIT;
-            return 0;
-        }
-
-        /*
-           Si ce n'est pas S ou Q,
-           on essaie de lire un nombre entier.
+           Si la saisie n'est ni S ni Q,
+           on essaie de la convertir en nombre entier.
         */
         result = sscanf(input, "%d", &value);
 
-        /*
-           Si la conversion échoue,
-           cela veut dire que l'utilisateur n'a pas tapé un nombre.
-        */
-        if (result != 1) {
+        if (result != 1) /* Si la conversion échoue */
+        {
             printf("Veuillez entrer un nombre valide.\n");
-            continue;
+            continue; /* Redemande une saisie */
         }
 
-        /*
-           Vérifie que le nombre est dans les limites autorisées.
-        */
-        if (value < minimum || value > maximum) {
+        if (value < minimum || value > maximum) /* Vérifie que le nombre est dans l'intervalle autorisé */
+        {
             printf("Valeur incorrecte. Entrez un nombre entre %d et %d.\n",
                    minimum,
                    maximum);
-            continue;
+            continue; /* Redemande une saisie */
         }
 
-        /*
-           Si tout est correct, on retourne le nombre.
-           action reste à ACTION_NONE.
-        */
-        return value;
+        return value; /* La saisie est correcte, on retourne le nombre */
     }
 }
